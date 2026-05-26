@@ -5782,14 +5782,41 @@ var _defaultRoutines = [
           {id:'rt10',name:'النوم في وقت محدد',emoji:'😴'}]}
 ];
 var routines = load('mnz_routines', _defaultRoutines);
-if (!routines || !Array.isArray(routines) || routines.length === 0) {
+// تحميل آمن للروتينات مع التعافي من الأخطاء
+try {
+    var loadedRoutines = load('mnz_routines', null);
+    if (loadedRoutines && Array.isArray(loadedRoutines) && loadedRoutines.length > 0) {
+        routines = loadedRoutines;
+    } else {
+        routines = JSON.parse(JSON.stringify(_defaultRoutines)); // نسخة عميقة
+    }
+} catch(e) {
+    console.error("Error loading routines, using defaults", e);
+    routines = JSON.parse(JSON.stringify(_defaultRoutines));
+}
+// التأكد من أن كل روتين يحتوي على الحقول الأساسية
+for (var i = 0; i < routines.length; i++) {
+    var r = routines[i];
+    if (!r.tasks) r.tasks = [];
+    if (!r.id) r.id = uid();
+    if (!r.icon) r.icon = '🌅';
+    if (!r.grad) r.grad = 'linear-gradient(135deg,#7c3aed,#4f46e5)';
+    if (!r.name) r.name = 'روتين غير مسمى';
+}
+saveRoutines(); // حفظ النسخة الصحيحة فوراًif (!routines || !Array.isArray(routines) || routines.length === 0) {
   routines = _defaultRoutines;
 }
 
 function saveRoutines() {
   try { save('mnz_routines', routines); } catch(e) {}
 }
-
+function saveRoutines() {
+    try {
+        save('mnz_routines', routines);
+    } catch(e) {
+        console.error("Failed to save routines", e);
+    }
+}
 var _RICONS  = ['🌅','🌙','⭐','🏋️','📚','💼','🧘','🎯','🌿','☕','🚀','❤️','🎵','🏃','✍️','🌞','💎','🔥','⚡','🎨'];
 var _TKICONS = ['✅','📖','🕌','💧','🏃','📝','📋','🧘','☕','🎯','💪','😴','🎵','🚶','🥗','📆','✍️','🌟','🧹','💊','🍎','🌙'];
 var _RGRADS  = [
@@ -5802,7 +5829,14 @@ var _RGRADS  = [
   {v:'linear-gradient(135deg,#14b8a6,#10b981)', l:'🦋 فيروزي'},
   {v:'linear-gradient(135deg,#f97316,#ef4444)', l:'🍂 برتقالي'}
 ];
-
+function renderRoutines(container) {
+    // تأكد من أن routines مصفوفة سليمة
+    if (!routines || !Array.isArray(routines)) {
+        routines = JSON.parse(JSON.stringify(_defaultRoutines));
+        saveRoutines();
+    }
+    // باقي الكود كما هو...
+}
 function renderRoutines(container) {
   // Safety guard — routines must be an array
   if (!routines || !Array.isArray(routines)) {
@@ -7227,7 +7261,18 @@ function resetSettings() {
     document.documentElement.style.setProperty('--grad-primary', 'linear-gradient(135deg,' + accentMap[accent] + ',#4f46e5)');
   }
 })();
-
+// تأمين وجود الدوال في النطاق العام (للـ WebView القديم)
+window.openAddRoutine = openAddRoutine;
+window.rEdit = rEdit;
+window.rDel = rDel;
+window.rTaskAdd = rTaskAdd;
+window.rTaskEdit = rTaskEdit;
+window.rTaskDel = rTaskDel;
+window.rmSave = rmSave;
+window.rtmSave = rtmSave;
+window.rApply = rApply;
+window._openRM = _openRM;
+window._openRTM = _openRTM;
 // ══════════════════════════════════════════
 // Remove settings injection from reports
 // ══════════════════════════════════════════
